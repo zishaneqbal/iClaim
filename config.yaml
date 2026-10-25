@@ -1,0 +1,123 @@
+# Central configuration for the Vehicle Damage Detection and Claim Analytics project.
+# All code reads values from here. Do not hard-code them elsewhere.
+
+project:
+  name: "iClaim"
+  seed: 42
+
+paths:
+  raw_data: "data/raw"
+  processed_data: "data/processed"
+  claims_csv: "data/claims/claims_sample.csv"
+  models_dir: "models"
+  best_model: "models/best_model.keras"
+  class_names_json: "models/class_names.json"
+  figures_dir: "reports/figures"
+  results_md: "reports/results.md"
+  predictions_log: "data/claims/predictions_log.csv"
+
+data:
+  # Folder names inside data/raw/<class> must match these (see docs/DATASET_GUIDE.md).
+  class_names:
+    - scratch
+    - dent
+    - crack
+    - broken_glass
+    - major_body_damage
+  # Optional: map differing Kaggle folder names to the class names above.
+  # Example: {"Scratches": "scratch", "Dents": "dent", "Broken Glass": "broken_glass"}
+  folder_aliases: {}
+  image_size: [224, 224]
+  channels: 3
+  split:
+    train: 0.70
+    val: 0.15
+    test: 0.15
+  allowed_extensions: [".jpg", ".jpeg", ".png", ".bmp", ".webp"]
+  max_upload_mb: 10
+  # Reject highly compressed images that expand to an unsafe pixel count in memory.
+  max_image_pixels: 25000000
+  min_image_side_px: 64
+  augmentation:
+    horizontal_flip: true
+    rotation_factor: 0.05      # fraction of 2*pi
+    zoom_factor: 0.10
+    contrast_factor: 0.15
+    brightness_factor: 0.15
+
+model:
+  backbone: "mobilenetv2"      # baseline | mobilenetv2 | resnet50 | efficientnetb0
+  use_imagenet_weights: true
+  dropout: 0.3
+  dense_units: 128
+
+training:
+  batch_size: 32
+  epochs_head: 10
+  epochs_finetune: 10
+  lr_head: 0.001
+  lr_finetune: 0.00001
+  unfreeze_last_layers: 30
+  early_stopping_patience: 4
+  reduce_lr_patience: 2
+  use_class_weights: true
+
+severity:
+  # Option C (rule-based) is the default because most public datasets have no severity labels.
+  # Severity score = class prior (weighted) + confidence contribution + damage-area contribution.
+  method: "rule_based"
+  class_prior:
+    scratch: 0.15
+    dent: 0.40
+    crack: 0.50
+    broken_glass: 0.60
+    major_body_damage: 0.90
+  weights:
+    class_prior: 0.60
+    area_ratio: 0.30
+    confidence: 0.10
+  thresholds:
+    minor_max: 0.35
+    moderate_max: 0.65
+  gradcam_activation_threshold: 0.50
+  # Grad-CAM damage area at or above this fraction counts as "full" area contribution.
+  area_ratio_saturation: 0.50
+
+analytics:
+  min_confidence: 0.70
+  # Priority rules. Evaluated top to bottom, first match wins.
+  # Low-confidence predictions are always routed to manual review.
+  priority_rules:
+    low_confidence: "Manual review required"
+    severe: "High"
+    moderate: "Medium"
+    minor: "Low"
+  # Indicative repair-cost ranges in INR (assumption, not real insurer data).
+  cost_ranges_inr:
+    scratch:
+      minor: [2000, 6000]
+      moderate: [5000, 12000]
+      severe: [10000, 20000]
+    dent:
+      minor: [3000, 8000]
+      moderate: [8000, 20000]
+      severe: [18000, 40000]
+    crack:
+      minor: [4000, 10000]
+      moderate: [10000, 25000]
+      severe: [22000, 50000]
+    broken_glass:
+      minor: [5000, 12000]
+      moderate: [12000, 30000]
+      severe: [28000, 60000]
+    major_body_damage:
+      minor: [25000, 60000]
+      moderate: [60000, 150000]
+      severe: [150000, 400000]
+  currency: "INR"
+
+synthetic_claims:
+  n_claims: 300
+  vehicle_types: ["Hatchback", "Sedan", "SUV", "Two-wheeler", "Commercial"]
+  policy_types: ["Comprehensive", "Third-party", "Zero-depreciation"]
+  seed: 42

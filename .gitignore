@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+venv/
+.venv/
+*.egg-info/
+
+# Data (never commit datasets)
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+data/claims/predictions_log.csv
+
+# Models (large files)
+!models/*
+models/*.json
+!models/.gitkeep
+
+# Secrets
+kaggle.json
+
+# OS / IDE
+.vscode/
+
+# Report outline (personal/academic info)
+docs/REPORT_OUTLINE.md
+docs/synopsis.md
+
+# Generated report figures (build artifacts)
+reports/figures/*.png
+reports/figures/*.json
+!reports/figures/.gitkeep
