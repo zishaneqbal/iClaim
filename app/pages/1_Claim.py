@@ -184,11 +184,11 @@ if res:
     img_col, cam_col, prob_col = st.columns([1, 1, 1.1])
     with img_col:
         with st.container(border=True):
-            st.markdown(hud_image_frame("Uploaded Image", "SENSOR: OPTICAL RGB // INPUT"), unsafe_allow_html=True)
+            st.markdown(hud_image_frame("Uploaded Image", "SENSOR: OPTICAL RGB INPUT"), unsafe_allow_html=True)
             st.image(Image.open(io.BytesIO(res["image_bytes"])), width="stretch")
     with cam_col:
         with st.container(border=True):
-            st.markdown(hud_image_frame("Grad-CAM Heatmap", "CONV ACTIVATION // EXPLAINABILITY"), unsafe_allow_html=True)
+            st.markdown(hud_image_frame("Grad-CAM Heatmap", "EXPLAINABILITY"), unsafe_allow_html=True)
             if pred.get("gradcam_overlay") is not None:
                 st.image(pred["gradcam_overlay"], caption="Where the CNN focused its attention", width="stretch")
             else:
