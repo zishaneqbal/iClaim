@@ -19,7 +19,7 @@ Vehicle Damage Intelligence — CNN-based preliminary damage assessment with ins
 | 📸 **Damage Classification** | CNN (MobileNetV2 transfer head) classifies damage type: scratch, dent, crack, broken glass, major body damage. |
 | ⚖️ **Severity Assessment** | Rule-based severity scoring → Minor / Moderate / Severe, with Grad-CAM heatmaps for explainability. |
 | 🎯 **Claim Priority** | Priority routing (Low / Medium / High / Manual review) based on severity + confidence. |
-| 📊 **Management Dashboard** | Damage frequency, severity distribution, indicative repair-cost ranges (INR), and claim priorities. |
+| 📊 **Management Dashboard** | Multi-tab operations view: damage frequency, severity breakdown, vehicle segment mix (8 categories), indicative repair costs (INR), intake timeline, and interactive Sunburst hierarchy. |
 | 🧱 **Modular ML Pipeline** | `src/` package: data loading, training, evaluation, prediction, Grad-CAM, severity, analytics. |
 | 🧪 **Tested** | Pytest suite covering data, model, Grad-CAM, severity, analytics, prediction, and image validation. |
 | ⚙️ **Config-Driven** | All hyperparameters, paths, class names, cost ranges, and thresholds in `config.yaml`. |

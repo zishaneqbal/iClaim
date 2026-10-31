@@ -15,12 +15,10 @@ data/processed/*
 data/claims/predictions_log.csv
 
 # Models (large files)
-!models/*
-models/*.json
+models/*
 !models/.gitkeep
+!models/*.json
 
-# Secrets
-kaggle.json
 
 # OS / IDE
 .vscode/

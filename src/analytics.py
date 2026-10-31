@@ -48,14 +48,25 @@ def priority_for(severity: str, confidence: float, cfg: dict | None = None) -> s
     return a["priority_rules"][severity]
 
 
-def estimate_cost_range(damage_class: str, severity: str, cfg: dict | None = None) -> Tuple[float, float]:
-    """Indicative (low, high) repair cost for a damage class and severity."""
+def estimate_cost_range(
+    damage_class: str,
+    severity: str,
+    cfg: dict | None = None,
+    vehicle_type: str | None = None,
+) -> Tuple[float, float]:
+    """Indicative (low, high) repair cost for a damage class and severity, optionally scaled by vehicle segment."""
     cfg = cfg or load_config()
     try:
         low, high = cfg["analytics"]["cost_ranges_inr"][damage_class][severity]
     except KeyError as exc:
         raise ValueError(f"No cost range for {damage_class}/{severity}") from exc
-    return float(low), float(high)
+    low, high = float(low), float(high)
+    if vehicle_type:
+        multipliers = cfg.get("analytics", {}).get("vehicle_multipliers", {})
+        mult = float(multipliers.get(vehicle_type, 1.0))
+        low = round(low * mult, -2)
+        high = round(high * mult, -2)
+    return low, high
 
 
 def amount_flag(claimed: Optional[float], low: float, high: float, tolerance: float = 1.25) -> str:
@@ -96,7 +107,8 @@ def build_claim_record(
     damage = prediction["damage_class"]
     severity = prediction["severity"]
     conf = float(prediction["class_confidence"])
-    low, high = estimate_cost_range(damage, severity, cfg)
+    v_type = claim_info.get("vehicle_type", "Unknown")
+    low, high = estimate_cost_range(damage, severity, cfg, vehicle_type=v_type)
     claimed = claim_info.get("claimed_amount")
     claimed = float(claimed) if claimed not in (None, "") else None
     return {
@@ -181,6 +193,39 @@ def priority_breakdown(df: pd.DataFrame) -> pd.DataFrame:
     return df["priority"].value_counts().rename_axis("priority").reset_index(name="claims")
 
 
+def vehicle_distribution(df: pd.DataFrame) -> pd.DataFrame:
+    """Count, share, and average estimated exposure per vehicle type."""
+    if df.empty or "vehicle_type" not in df:
+        return pd.DataFrame(columns=["vehicle_type", "claims", "share_pct", "avg_exposure"])
+    temp = df.copy()
+    temp["mid_cost"] = (temp["est_cost_low"] + temp["est_cost_high"]) / 2
+    g = temp.groupby("vehicle_type").agg(
+        claims=("claim_id", "count"),
+        avg_exposure=("mid_cost", "mean"),
+    ).reset_index()
+    g["share_pct"] = (g["claims"] / g["claims"].sum() * 100).round(1)
+    g["avg_exposure"] = g["avg_exposure"].round(0)
+    return g.sort_values("claims", ascending=False).reset_index(drop=True)
+
+
+def timeline_trends(df: pd.DataFrame) -> pd.DataFrame:
+    """Weekly aggregated count and total exposure."""
+    if df.empty or "claim_date" not in df:
+        return pd.DataFrame(columns=["period", "claims", "exposure"])
+    temp = df.copy()
+    temp["date"] = pd.to_datetime(temp["claim_date"], errors="coerce")
+    temp = temp.dropna(subset=["date"])
+    if temp.empty:
+        return pd.DataFrame(columns=["period", "claims", "exposure"])
+    temp["period"] = temp["date"].dt.to_period("W").dt.start_time
+    temp["mid_cost"] = (temp["est_cost_low"] + temp["est_cost_high"]) / 2
+    out = temp.groupby("period").agg(
+        claims=("claim_id", "count"),
+        exposure=("mid_cost", "sum"),
+    ).reset_index().sort_values("period")
+    return out
+
+
 def compute_kpis(df: pd.DataFrame) -> Dict[str, float]:
     """Headline numbers for the dashboard."""
     if df.empty:
@@ -234,7 +279,8 @@ def generate_synthetic_claims(
         dmg = str(rng.choice(classes, p=class_p))
         sev = str(rng.choice(SEVERITY_ORDER, p=sev_p.get(dmg, [1 / 3] * 3)))
         conf = float(np.clip(rng.beta(8, 2), 0.35, 0.995))
-        low, high = estimate_cost_range(dmg, sev, cfg)
+        vtype = str(rng.choice(sc["vehicle_types"]))
+        low, high = estimate_cost_range(dmg, sev, cfg, vehicle_type=vtype)
         est_mid = rng.uniform(low, high)
         # Claimed amount: mostly near the estimate, occasionally inflated.
         factor = rng.lognormal(0.0, 0.18) * (rng.uniform(1.4, 2.0) if rng.random() < 0.07 else 1.0)
@@ -243,7 +289,7 @@ def generate_synthetic_claims(
             {
                 "claim_id": f"SYN-{i + 1:05d}",
                 "claim_date": (end - pd.Timedelta(days=int(rng.integers(0, 180)))).date().isoformat(),
-                "vehicle_type": str(rng.choice(sc["vehicle_types"])),
+                "vehicle_type": vtype,
                 "policy_type": str(rng.choice(sc["policy_types"])),
                 "damage_class": dmg,
                 "severity": sev,

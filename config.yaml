@@ -95,29 +95,51 @@ analytics:
   # Indicative repair-cost ranges in INR (assumption, not real insurer data).
   cost_ranges_inr:
     scratch:
-      minor: [2000, 6000]
-      moderate: [5000, 12000]
-      severe: [10000, 20000]
+      minor: [2500, 6500]
+      moderate: [6000, 14000]
+      severe: [12000, 25000]
     dent:
-      minor: [3000, 8000]
-      moderate: [8000, 20000]
-      severe: [18000, 40000]
+      minor: [3500, 9500]
+      moderate: [9000, 22000]
+      severe: [20000, 48000]
     crack:
-      minor: [4000, 10000]
-      moderate: [10000, 25000]
-      severe: [22000, 50000]
+      minor: [4500, 11000]
+      moderate: [11000, 28000]
+      severe: [25000, 58000]
     broken_glass:
-      minor: [5000, 12000]
-      moderate: [12000, 30000]
-      severe: [28000, 60000]
+      minor: [5500, 13500]
+      moderate: [13500, 32000]
+      severe: [30000, 70000]
     major_body_damage:
-      minor: [25000, 60000]
-      moderate: [60000, 150000]
-      severe: [150000, 400000]
+      minor: [30000, 70000]
+      moderate: [70000, 175000]
+      severe: [175000, 450000]
+  # Segment-specific multipliers scaling indicative repair costs (benchmark against Sedan = 1.0)
+  vehicle_multipliers:
+    "Two-Wheeler / Bike": 0.45
+    "Hatchback": 0.85
+    "Sedan": 1.00
+    "SUV": 1.25
+    "Commercial / Light Truck": 1.35
+    "Electric Vehicle (EV)": 1.45
+    "Heavy Commercial": 1.85
+    "Luxury / Premium": 2.20
   currency: "INR"
 
 synthetic_claims:
-  n_claims: 300
-  vehicle_types: ["Hatchback", "Sedan", "SUV", "Two-wheeler", "Commercial"]
-  policy_types: ["Comprehensive", "Third-party", "Zero-depreciation"]
+  n_claims: 350
+  vehicle_types:
+    - "Hatchback"
+    - "Sedan"
+    - "SUV"
+    - "Luxury / Premium"
+    - "Electric Vehicle (EV)"
+    - "Commercial / Light Truck"
+    - "Two-Wheeler / Bike"
+    - "Heavy Commercial"
+  policy_types:
+    - "Comprehensive"
+    - "Third-party"
+    - "Zero-depreciation"
+    - "Pay-as-you-drive"
   seed: 42
