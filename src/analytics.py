@@ -33,7 +33,6 @@ SEVERITY_ORDER = ["minor", "moderate", "severe"]
 _CLAIM_ID_PATTERN = re.compile(r"[A-Za-z0-9_-]{1,64}")
 
 
-# --------------------------------------------------------------------------- rules
 def priority_for(severity: str, confidence: float, cfg: dict | None = None) -> str:
     """Claim-processing priority.
 
@@ -128,7 +127,6 @@ def build_claim_record(
     }
 
 
-# ----------------------------------------------------------------------- persistence
 def append_prediction_log(record: dict, cfg: dict | None = None) -> Path:
     """Append one record to the predictions log CSV (created on first use)."""
     cfg = cfg or load_config()
@@ -154,7 +152,6 @@ def load_claims(cfg: dict | None = None, include_log: bool = True) -> pd.DataFra
     return df.drop_duplicates(subset="claim_id", keep="last").reset_index(drop=True)
 
 
-# ----------------------------------------------------------------------- aggregations
 def damage_frequency(df: pd.DataFrame) -> pd.DataFrame:
     """Count and share of claims per damage class."""
     if df.empty:
@@ -244,7 +241,6 @@ def compute_kpis(df: pd.DataFrame) -> Dict[str, float]:
     }
 
 
-# --------------------------------------------------------------------- synthetic data
 def generate_synthetic_claims(
     n: int | None = None,
     cfg: dict | None = None,
@@ -282,7 +278,6 @@ def generate_synthetic_claims(
         vtype = str(rng.choice(sc["vehicle_types"]))
         low, high = estimate_cost_range(dmg, sev, cfg, vehicle_type=vtype)
         est_mid = rng.uniform(low, high)
-        # Claimed amount: mostly near the estimate, occasionally inflated.
         factor = rng.lognormal(0.0, 0.18) * (rng.uniform(1.4, 2.0) if rng.random() < 0.07 else 1.0)
         claimed = round(est_mid * factor, -2)
         rows.append(

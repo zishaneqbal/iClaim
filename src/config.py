@@ -47,11 +47,11 @@ def set_seed(seed: int | None = None) -> int:
     random.seed(seed)
     np.random.seed(seed)
     os.environ["PYTHONHASHSEED"] = str(seed)
-    try:  # TensorFlow is optional for modules that only need config
+    try:
         import tensorflow as tf
 
         tf.random.set_seed(seed)
-    except Exception:  # pragma: no cover
+    except Exception:
         pass
     return seed
 

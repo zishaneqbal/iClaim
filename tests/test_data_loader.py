@@ -37,11 +37,9 @@ def test_prepare_splits_ratios_and_no_overlap(data_cfg, tmp_path):
     by_split = manifest.groupby("split").size()
     assert by_split["train"] == 70 and by_split["val"] == 15 and by_split["test"] == 15
 
-    # Every class appears in every split (stratified)
     pivot = manifest.groupby(["split", "class"]).size().unstack(fill_value=0)
     assert (pivot > 0).all().all()
 
-    # Source files are never reused across splits
     assert manifest["source"].is_unique
 
 
@@ -99,4 +97,4 @@ def test_class_weights_favour_rare_classes(data_cfg, tmp_path):
     root = tmp_path / "processed"
     _make_raw(root / "train", {"scratch": 30, "dent": 10, "crack": 10, "broken_glass": 10, "major_body_damage": 10})
     w = compute_class_weights(data_cfg, root)
-    assert w[0] < w[1]  # scratch (common) weighs less than dent (rare)
+    assert w[0] < w[1]

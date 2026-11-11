@@ -22,7 +22,7 @@ def find_feature_layer(model):
     from tensorflow import keras
 
     for layer in reversed(model.layers):
-        if isinstance(layer, keras.Model):  # nested backbone
+        if isinstance(layer, keras.Model):
             return layer
         if isinstance(layer, keras.layers.Conv2D):
             return layer
@@ -46,9 +46,6 @@ def make_gradcam_heatmap(model, img_array: np.ndarray, class_index: Optional[int
     feature_layer = find_feature_layer(model)
     x = tf.convert_to_tensor(img_array, dtype=tf.float32)
     conv_out = None
-    # Models built by src.model are linear chains, so we replay them layer by layer and
-    # capture the feature map on the way. (A nested backbone's `.output` is wired to its own
-    # input, not to the outer model's, so building a sub-model from it does not work.)
     with tf.GradientTape() as tape:
         for layer in model.layers:
             if isinstance(layer, keras.layers.InputLayer):

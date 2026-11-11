@@ -14,14 +14,14 @@ import importlib
 import pandas as pd
 import streamlit as st
 
-from components import charts
-from components.ui import CFG, metric_card, page_setup, section_header, synthetic_notice
+from components import charts, ui
+from components.ui import CFG, metric_card, page_setup, section_header, svg_icon, synthetic_notice
 from src import analytics
 
-# Reload in case Streamlit kept an older in-memory version in sys.modules
 try:
     importlib.reload(analytics)
     importlib.reload(charts)
+    importlib.reload(ui)
 except Exception:
     pass
 from src.utils import format_inr
@@ -62,24 +62,28 @@ def _get_timeline_trends(d: pd.DataFrame) -> pd.DataFrame:
         exposure=("mid_cost", "sum"),
     ).reset_index().sort_values("period")
 
-page_setup("Operations Dashboard", "📊")
 
-section_header("Management Dashboard", "Claim-level telemetry, portfolio severity, and actuarial cost analytics")
+page_setup("Operations Dashboard", ":material/dashboard:", current_page="Dashboard")
+
+section_header("Management Dashboard", "Claim-level telemetry, portfolio severity, and actuarial cost analytics", icon="dashboard")
 
 claims = analytics.load_claims(CFG)
 if claims.empty:
-    st.info("No claims yet. Generate sample data with `python -m src.analytics --generate`.")
+    st.info("No claims yet. Generate sample data with: python -m src.analytics --generate")
     st.stop()
 
 if (claims["data_source"] == "synthetic").any():
     synthetic_notice()
 
-# ---- Filters ---------------------------------------------------------------
+filter_svg = svg_icon("filter", size=18, color="#00d2ff")
 with st.container(border=True):
     st.markdown(
-        """
+        f"""
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.75rem;">
-          <h3 style="margin:0; font-size:1.05rem; font-weight:700;">🔍 Telemetry & Claim Filters</h3>
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <span style="color:#00d2ff; display:inline-grid; place-items:center;">{filter_svg}</span>
+            <h3 style="margin:0; font-size:1.05rem; font-weight:700;">Telemetry & Claim Filters</h3>
+          </div>
           <span style="font-size:0.8rem; color:var(--muted);">Filter by date range, vehicle segment, or damage profile</span>
         </div>
         """,
@@ -110,11 +114,12 @@ if df.empty:
     st.warning("No claims match the selected filters.")
     st.stop()
 
-# Filter count telemetry banner
+activity_svg = svg_icon("activity", size=14, color="#00d2ff")
 st.markdown(
     f"""
-    <div style="background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:0.6rem 1rem; margin:1rem 0; display:flex; align-items:center; justify-content:space-between;">
-      <span style="font-size:0.85rem; color:var(--muted);">
+    <div style="background:linear-gradient(135deg, color-mix(in srgb, var(--panel) 95%, transparent), color-mix(in srgb, var(--panel) 85%, var(--blue))); border:1px solid var(--line); border-radius:12px; padding:0.65rem 1.1rem; margin:1rem 0; display:flex; align-items:center; justify-content:space-between;">
+      <span style="font-size:0.85rem; color:var(--muted); display:inline-flex; align-items:center; gap:0.5rem;">
+        <span style="color:#00d2ff; display:inline-grid; place-items:center;">{activity_svg}</span>
         Active cohort: <strong>{len(df):,}</strong> of <strong>{len(claims):,}</strong> total claims in portfolio
       </span>
       <span class="badge" style="background:rgba(0,210,255,0.12); color:#00d2ff; border:1px solid rgba(0,210,255,0.25); font-size:0.72rem;">
@@ -125,32 +130,30 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ---- KPI cards --------------------------------------------------------------
-section_header("Key performance indicators", "Aggregate metrics and risk exposure for active claim cohort")
+section_header("Key performance indicators", "Aggregate metrics and risk exposure for active claim cohort", icon="activity")
 k = analytics.compute_kpis(df)
 c1, c2, c3, c4, c5 = st.columns(5)
 with c1:
-    metric_card("Total claims", f"{k['total_claims']:,}", sub="Active filtered volume", color="#0284c7", icon="📋")
+    metric_card("Total claims", f"{k['total_claims']:,}", sub="Active filtered volume", color="#0284c7", icon="clipboard")
 with c2:
-    metric_card("Severe claims", f"{k['pct_severe']}%", sub="Of cohort volume", color="#f43f5e", icon="🚨")
+    metric_card("Severe claims", f"{k['pct_severe']}%", sub="Of cohort volume", color="#f43f5e", icon="alert")
 with c3:
-    metric_card("Avg. confidence", f"{k['avg_confidence']:.0%}", sub="Model confidence mean", color="#10b981", icon="🎯")
+    metric_card("Avg. confidence", f"{k['avg_confidence']:.0%}", sub="Model confidence mean", color="#10b981", icon="target")
 with c4:
-    metric_card("Manual review", f"{k['manual_review']:,}", sub="Low-confidence queue", color="#f59e0b", icon="🔍")
+    metric_card("Manual review", f"{k['manual_review']:,}", sub="Low-confidence queue", color="#f59e0b", icon="search")
 with c5:
-    metric_card("Est. exposure", format_inr(k["est_exposure_mid"]), sub="Midpoint indicative sum", color="#00d2ff", icon="💰")
+    metric_card("Est. exposure", format_inr(k["est_exposure_mid"]), sub="Midpoint indicative sum", color="#00d2ff", icon="currency")
 
 if k["above_range"]:
-    st.warning(f"⚠️ {k['above_range']} claim(s) have a claimed amount exceeding the indicative repair range and are flagged for review.")
+    st.warning(f"Audit Flag: {k['above_range']} claim(s) have a claimed amount exceeding the indicative repair range and are routed for review.")
 
-# ---- Modern Interactive Charts with Tabs ------------------------------------
-section_header("Analytics charts", "Interactive damage frequencies, vehicle segments, repair cost ranges, and timeline telemetry")
+section_header("Analytics charts", "Interactive damage frequencies, vehicle segments, repair cost ranges, and timeline telemetry", icon="chart")
 
 tab_overview, tab_costs, tab_timeline, tab_hierarchy = st.tabs([
-    "📊 Overview & Vehicle Mix",
-    "💰 Cost & Exposure Ranges",
-    "📈 Intake Velocity & Timeline",
-    "🔬 Interactive Hierarchy (Sunburst)",
+    "Overview & Vehicle Mix",
+    "Cost & Exposure Ranges",
+    "Intake Velocity & Timeline",
+    "Portfolio Hierarchy (Sunburst)",
 ])
 
 with tab_overview:
@@ -204,23 +207,23 @@ with tab_hierarchy:
             charts.damage_sunburst_chart(df),
             width="stretch",
         )
-    st.caption("💡 Click any segment (Vehicle Type ➔ Damage Class ➔ Severity) to drill down interactively. Click the center circle to zoom back out.")
+    st.caption("Click any segment (Vehicle Type -> Damage Class -> Severity) to drill down interactively. Click the center circle to zoom back out.")
 
-# ---- Table + export ---------------------------------------------------------
-section_header("Claims register", "Filtered claim-level tabular records")
+section_header("Claims register", "Filtered claim-level tabular records", icon="clipboard")
 table = df.sort_values("claim_date", ascending=False).copy()
 table["claim_date"] = table["claim_date"].dt.date
 st.dataframe(table, width="stretch", hide_index=True)
 
 st.download_button(
-    "📥 Download Filtered Claims Register (CSV)",
+    "Download Filtered Claims Register (CSV)",
+    icon=":material/download:",
     data=table.to_csv(index=False).encode("utf-8"),
     file_name="claims_filtered.csv",
     mime="text/csv",
     use_container_width=False,
 )
 
-with st.expander("📊 View Raw Numerical Data for Charts", expanded=False):
+with st.expander("View Raw Numerical Data for Charts", expanded=False):
     t_c1, t_c2, t_c3 = st.columns(3)
     with t_c1:
         st.write("**Damage Frequency Distribution**")

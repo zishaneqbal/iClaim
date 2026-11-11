@@ -83,7 +83,6 @@ def train(
     history_all: dict = {}
     started = time.time()
 
-    # Phase 1: train the head (backbone frozen). Baseline trains all layers here.
     compile_model(model, t["lr_head"])
     h1 = model.fit(
         train_ds,
@@ -95,7 +94,6 @@ def train(
     for k, v in h1.history.items():
         history_all.setdefault(k, []).extend(v)
 
-    # Phase 2: fine-tune top backbone layers at a low learning rate.
     n_ft = epochs_finetune if epochs_finetune is not None else t["epochs_finetune"]
     if get_backbone_layer(model) is not None and n_ft > 0:
         unfreeze_for_finetuning(model, t["unfreeze_last_layers"])
@@ -114,7 +112,6 @@ def train(
     figures = resolve_path(cfg["paths"]["figures_dir"])
     plot_history(history_all, figures / f"training_curves_{backbone}.png")
 
-    # Reload the best checkpoint so the saved file is the best-validation model.
     if not out_path.exists():
         model.save(out_path)
     class_json = resolve_path(cfg["paths"]["class_names_json"])

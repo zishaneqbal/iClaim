@@ -21,7 +21,7 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 
-from src import model as _model_module  # noqa: F401  (registers custom Keras layers)
+from src import model as _model_module
 from src.config import get_logger, load_config, resolve_path
 from src.severity import assess_severity
 from src.utils import ImageInput, load_image, preprocess_image
@@ -94,7 +94,7 @@ def predict(
     names = class_names or class_names_for(cfg)
     model = model if model is not None else load_trained_model(cfg=cfg)
 
-    pil_image = load_image(image, cfg)  # validates
+    pil_image = load_image(image, cfg)
     batch = preprocess_image(pil_image, cfg)
     probs = np.asarray(model.predict(batch, verbose=0)[0], dtype="float64")
     if len(probs) != len(names):
@@ -116,7 +116,7 @@ def predict(
             area_ratio = damage_area_ratio(heat, cfg["severity"]["gradcam_activation_threshold"])
             if return_overlay:
                 overlay = overlay_heatmap(pil_image, heat)
-        except Exception as exc:  # Grad-CAM must never break a prediction
+        except Exception as exc:
             logger.warning("Grad-CAM unavailable (%s); using class prior for severity", exc)
 
     sev = assess_severity(damage_class, confidence, area_ratio, cfg)

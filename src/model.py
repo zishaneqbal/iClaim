@@ -75,7 +75,7 @@ def build_transfer_model(backbone: str, num_classes: int, cfg: dict) -> keras.Mo
         x = layers.Rescaling(1.0 / 127.5, offset=-1.0, name="preprocess")(inputs)
     elif backbone == "resnet50":
         x = ResNetPreprocess(name="preprocess")(inputs)
-    else:  # EfficientNet rescales internally and expects 0-255
+    else:
         x = inputs
     x = base(x, training=False)
     x = layers.GlobalAveragePooling2D(name="gap")(x)

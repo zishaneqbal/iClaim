@@ -7,7 +7,6 @@ from __future__ import annotations
 import pandas as pd
 import plotly.graph_objects as go
 
-# Categorical entity palette matching automotive intelligence theme
 CLASS_COLORS = {
     "scratch": "#00d2ff",
     "dent": "#f59e0b",
@@ -16,14 +15,12 @@ CLASS_COLORS = {
     "major_body_damage": "#f43f5e",
 }
 
-# Sequential severity palette
 SEVERITY_COLORS = {
     "minor": "#10b981",
     "moderate": "#f59e0b",
     "severe": "#f43f5e",
 }
 
-# Priority routing palette
 PRIORITY_COLORS = {
     "Low": "#10b981",
     "Medium": "#00d2ff",
@@ -260,7 +257,6 @@ def timeline_trend_chart(trend_df: pd.DataFrame) -> go.Figure:
     """Interactive time-series line & area chart showing claims intake velocity and exposure."""
     fig = go.Figure()
 
-    # Claims count trace (left axis)
     fig.add_trace(
         go.Scatter(
             x=trend_df["period"],
@@ -275,7 +271,6 @@ def timeline_trend_chart(trend_df: pd.DataFrame) -> go.Figure:
         )
     )
 
-    # Exposure trace (secondary right axis)
     fig.add_trace(
         go.Scatter(
             x=trend_df["period"],
@@ -304,19 +299,16 @@ def timeline_trend_chart(trend_df: pd.DataFrame) -> go.Figure:
 
 def damage_sunburst_chart(df: pd.DataFrame) -> go.Figure:
     """Multi-tiered interactive Sunburst chart: Vehicle Type -> Damage Class -> Severity."""
-    # Build hierarchical aggregation
     levels = df.groupby(["vehicle_type", "damage_class", "severity"]).size().reset_index(name="count")
 
     labels, parents, values = ["Total Fleet"], [""], [len(df)]
 
-    # Tier 1: Vehicle Types
     v_counts = df["vehicle_type"].value_counts()
     for v, count in v_counts.items():
         labels.append(str(v))
         parents.append("Total Fleet")
         values.append(int(count))
 
-    # Tier 2: Vehicle Type + Damage Class
     vd_counts = df.groupby(["vehicle_type", "damage_class"]).size().reset_index(name="count")
     for _, row in vd_counts.iterrows():
         v, d, count = row["vehicle_type"], row["damage_class"], row["count"]
@@ -324,7 +316,6 @@ def damage_sunburst_chart(df: pd.DataFrame) -> go.Figure:
         parents.append(str(v))
         values.append(int(count))
 
-    # Tier 3: Severity
     for _, row in levels.iterrows():
         v, d, s, count = row["vehicle_type"], row["damage_class"], row["severity"], row["count"]
         labels.append(f"{_pretty(s)} ({d[:4]}-{v[:3]})")
