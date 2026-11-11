@@ -54,6 +54,13 @@ section_header("Claim", "Upload a vehicle damage photograph for neural classific
 if not require_model():
     st.stop()
 
+upload = None
+claim_id = ""
+claim_date = date.today()
+vehicle_type = CFG["synthetic_claims"]["vehicle_types"][0]
+policy_type = CFG["synthetic_claims"]["policy_types"][0]
+claimed_amount = 0.0
+
 left, right = st.columns([1.1, 1])
 
 with left:

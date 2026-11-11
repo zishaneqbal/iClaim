@@ -19,7 +19,7 @@ logger = get_logger(__name__)
 
 def find_feature_layer(model):
     """Return the layer whose output is the last convolutional feature map."""
-    from tensorflow import keras
+    import keras
 
     for layer in reversed(model.layers):
         if isinstance(layer, keras.Model):
@@ -40,8 +40,8 @@ def make_gradcam_heatmap(model, img_array: np.ndarray, class_index: Optional[int
     Returns:
         2D float32 array (feature-map resolution) scaled to [0, 1].
     """
+    import keras
     import tensorflow as tf
-    from tensorflow import keras
 
     feature_layer = find_feature_layer(model)
     x = tf.convert_to_tensor(img_array, dtype=tf.float32)
@@ -81,10 +81,10 @@ def damage_area_ratio(heatmap: np.ndarray, threshold: float | None = None) -> fl
 
 def overlay_heatmap(image: Image.Image, heatmap: np.ndarray, alpha: float = 0.4) -> np.ndarray:
     """Overlay a heatmap on the original image. Returns an RGB uint8 array."""
-    rgb = np.asarray(image.convert("RGB"))
-    h, w = rgb.shape[:2]
+    w, h = image.size
+    rgb = np.asarray(image.convert("RGB"), dtype=np.uint8)
     resized = cv2.resize(heatmap, (w, h), interpolation=cv2.INTER_CUBIC)
     resized = np.clip(resized, 0, 1)
-    colored = cv2.applyColorMap(np.uint8(255 * resized), cv2.COLORMAP_JET)
+    colored = cv2.applyColorMap((255 * resized).astype(np.uint8), cv2.COLORMAP_JET)
     colored = cv2.cvtColor(colored, cv2.COLOR_BGR2RGB)
     return cv2.addWeighted(rgb, 1 - alpha, colored, alpha, 0)
