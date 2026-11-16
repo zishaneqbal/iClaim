@@ -7,21 +7,31 @@ venv/
 .venv/
 *.egg-info/
 
-# Data (never commit datasets)
+# Environment & Secrets
+.env
+.env.*
+.streamlit/secrets.toml
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Data (never commit raw/processed datasets or runtime user logs)
 data/raw/*
 data/processed/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 data/claims/predictions_log.csv
+data/.keras/
 
-# Models (large files)
+# Production Models)
 models/*
 !models/.gitkeep
 !models/*.json
-
-
-# OS / IDE
-.vscode/
+!models/*.keras
 
 # Report outline (personal/academic info)
 docs/REPORT_OUTLINE.md

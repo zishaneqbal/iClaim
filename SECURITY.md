@@ -13,6 +13,8 @@ data.
   25-million-pixel decoded-image limit.
 - Image validation runs before inference and rejects empty, unreadable, undersized and unsafe
   images.
+- Vehicle verification gatekeeping and Shannon entropy out-of-distribution (OOD) filtering halt
+  automated damage classification and cost estimation if non-vehicle or anomalous subjects are uploaded.
 - Claim IDs are restricted to a safe 1-64 character identifier format, avoiding spreadsheet-formula
   injection in exported CSV files.
 - Configuration is parsed with `yaml.safe_load`.

@@ -25,6 +25,7 @@ from src import model as _model_module
 from src.config import get_logger, load_config, resolve_path
 from src.severity import assess_severity
 from src.utils import ImageInput, load_image, preprocess_image
+from src.vehicle_gate import evaluate_claim_validity
 
 logger = get_logger(__name__)
 
@@ -106,6 +107,8 @@ def predict(
     damage_class = names[idx]
     confidence = float(probs[idx])
 
+    validity = evaluate_claim_validity(pil_image, probs, cfg)
+
     area_ratio: Optional[float] = None
     overlay = None
     if use_gradcam or return_overlay:
@@ -128,6 +131,8 @@ def predict(
         "severity_score": sev["score"],
         "damage_area_ratio": None if area_ratio is None else round(area_ratio, 4),
         "low_confidence": confidence < cfg["analytics"]["min_confidence"],
+        "is_valid_vehicle_claim": validity["is_valid_claim"],
+        "vehicle_verification": validity,
     }
     if return_overlay:
         result["gradcam_overlay"] = overlay

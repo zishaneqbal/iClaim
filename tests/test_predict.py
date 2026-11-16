@@ -63,3 +63,12 @@ def test_low_confidence_flag_consistent(cfg, baseline_model, rgb_image):
 def test_class_count_mismatch_raises(cfg, baseline_model, rgb_image):
     with pytest.raises(ValueError):
         predict(rgb_image, model=baseline_model, cfg=cfg, class_names=["a", "b"])
+
+
+def test_predict_returns_vehicle_verification_keys(cfg, baseline_model, rgb_image):
+    out = predict(rgb_image, model=baseline_model, cfg=cfg)
+    assert "is_valid_vehicle_claim" in out
+    assert "vehicle_verification" in out
+    assert isinstance(out["is_valid_vehicle_claim"], bool)
+    assert isinstance(out["vehicle_verification"], dict)
+

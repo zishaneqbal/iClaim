@@ -9,7 +9,7 @@
 [![TensorFlow](https://img.shields.io/badge/TensorFlow-2.15-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)](https://www.tensorflow.org/)
 [![Keras](https://img.shields.io/badge/Keras-MobileNetV2-D00000?style=for-the-badge&logo=keras&logoColor=white)](https://keras.io/)
 [![Plotly](https://img.shields.io/badge/Plotly-Interactive-3F4F75?style=for-the-badge&logo=plotly&logoColor=white)](https://plotly.com/)
-[![Tests](https://img.shields.io/badge/Pytest-80%20Passed-10b981?style=for-the-badge&logo=pytest&logoColor=white)](tests/)
+[![Tests](https://img.shields.io/badge/Pytest-89%20Passed-10b981?style=for-the-badge&logo=pytest&logoColor=white)](tests/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
 <br/>
@@ -25,10 +25,11 @@
 ## 🌟 Overview & Architecture
 
 **iClaim** bridges the gap between deep computer vision and insurance claims processing. Rather than acting as a black-box model, it combines:
-1. **Computer Vision Head**: MobileNetV2 transfer learning trained on multi-class vehicle panel damage.
-2. **Explainable AI (XAI)**: Grad-CAM gradient saliency maps pinpointing where the model focused.
-3. **Automated Actuarial Triage**: Multi-signal severity scoring (class prior + confidence + activation area ratio) mapped into automated claim priority routing (Low / Medium / High / Manual Review).
-4. **Segment-Aware Cost Estimation**: Indicative INR repair cost benchmarking across 8 vehicle segments (from Two-Wheelers to Luxury EVs and Heavy Commercial).
+1. **Vehicle Verification Gatekeeper & OOD Filter**: Hybrid pre-filter verifying genuine automotive components (including windshield radial crazing patterns) and blocking non-vehicle subjects (animals, food, consumer items) using confidence & Shannon entropy gating.
+2. **Computer Vision Head**: MobileNetV2 transfer learning trained on multi-class vehicle panel damage.
+3. **Explainable AI (XAI)**: Grad-CAM gradient saliency maps pinpointing where the model focused.
+4. **Automated Actuarial Triage**: Multi-signal severity scoring (class prior + confidence + activation area ratio) mapped into automated claim priority routing (Low / Medium / High / Manual Review).
+5. **Segment-Aware Cost Estimation**: Indicative INR repair cost benchmarking across 8 vehicle segments (from Two-Wheelers to Luxury EVs and Heavy Commercial).
 
 ```
    ┌────────────────────────────────────────────────────────────────────────┐
@@ -36,31 +37,39 @@
    └────────────────────────────────────────────────────────────────────────┘
                                     │
                                     ▼
-       [ 📸 Vehicle Image ] ──► (Quality & Blur Gate) ──► [ Laplacian Variance >= 60 ]
+       [ 📸 Image Upload ] ──► (Quality & Blur Gate) ──► [ Laplacian Variance >= 60 ]
                                     │
                                     ▼
-                        [ MobileNetV2 CNN Head ]
+                     [ 🛡️ Vehicle & OOD Gatekeeper ]
+            (45+ Automotive Signatures / 460+ Negative Classes / Entropy)
                                     │
-                  ┌─────────────────┴─────────────────┐
-                  ▼                                   ▼
-        { Class Probabilities }             { Convolutional Saliency }
-        (Scratch, Dent, Crack, Glass, Body)           │
-                  │                                   ▼
-                  │                         [ Grad-CAM Heatmap ]
-                  │                         (Activated Area Ratio)
-                  └─────────────────┬─────────────────┘
-                                    │
-                                    ▼
-                    [ ⚖️ Rule-Based Severity Engine ]
-                    (Class Prior + Confidence + Area)
-                                    │
-                  ┌─────────────────┴─────────────────┐
-                  ▼                                   ▼
-       [ 🎯 Claim Priority ]               [ 💰 Indicative Repair Cost ]
-     (Low / Medium / High / Review)       (Base Class Range x Vehicle Multiplier)
-                                    │
-                                    ▼
-                   [ 📊 Operations Management Dashboard ]
+                    ┌───────────────┴───────────────┐
+                    ▼                               ▼
+          [ ⚠️ Non-Vehicle / OOD ]        [ ✅ Vehicle Verified ]
+          (Halt Assessment & Alert)                 │
+                                                    ▼
+                                        [ MobileNetV2 CNN Head ]
+                                                    │
+                                  ┌─────────────────┴─────────────────┐
+                                  ▼                                   ▼
+                        { Class Probabilities }             { Convolutional Saliency }
+                        (Scratch, Dent, Crack, Glass, Body)           │
+                                  │                                   ▼
+                                  │                         [ Grad-CAM Heatmap ]
+                                  │                         (Activated Area Ratio)
+                                  └─────────────────┬─────────────────┘
+                                                    │
+                                                    ▼
+                                    [ ⚖️ Rule-Based Severity Engine ]
+                                    (Class Prior + Confidence + Area)
+                                                    │
+                                  ┌─────────────────┴─────────────────┐
+                                  ▼                                   ▼
+                       [ 🎯 Claim Priority ]               [ 💰 Indicative Repair Cost ]
+                     (Low / Medium / High / Review)       (Base Class Range x Vehicle Multiplier)
+                                                    │
+                                                    ▼
+                                   [ 📊 Operations Management Dashboard ]
 ```
 
 ---
@@ -69,6 +78,7 @@
 
 | Capability | Technical Details | Operational Impact |
 | :--- | :--- | :--- |
+| 🛡️ **Vehicle & OOD Gatekeeper** | Dual-stage verification: ImageNet automotive & glass-crazing detection, 460+ non-vehicle negative filter, and Shannon entropy OOD gating. | Prevents spurious damage predictions on non-vehicles (animals, food, gadgets) while accepting genuine close-up damage panels. |
 | 📸 **Damage Classification** | Deep MobileNetV2 transfer learning trained across 5 critical damage types. | Instant damage identification in **<25 ms** per photograph. |
 | 🔬 **Grad-CAM Explainability** | Layer-by-layer gradient activation tracking with JET colormap alpha overlay. | Transparent inspection: claims adjusters can see exactly which panels triggered the classification. |
 | 🛡️ **Optical QA & Blur Gate** | Laplacian variance edge-filtering rejects blurry or corrupt images (<60 score). | Prevents hallucinated or unconfident assessments on degraded photos. |
@@ -121,7 +131,7 @@ Frontend & Visual Telemetry:
   • Custom CSS Animations  - Automotive HUD reticle brackets, laser scanlines, and glowing LED pills
 
 Quality & Engineering:
-  • Pytest                 - 80 automated unit & regression test cases
+  • Pytest                 - 89 automated unit & regression test cases
   • GitHub Actions CI      - Automated multi-OS build and test verification
 ```
 
@@ -141,6 +151,7 @@ iClaim/
 │       └── ui.py              # Telemetry CSS, HUD inspection frames, and metric cards
 ├── src/
 │   ├── config.py              # YAML config loader (single source of truth)
+│   ├── vehicle_gate.py        # Automotive gatekeeper & Shannon entropy OOD gating
 │   ├── data_loader.py         # Dataset preparation, stratified splits & class weights
 │   ├── model.py               # MobileNetV2, ResNet50, and EfficientNet architectures
 │   ├── train.py               # Two-stage transfer learning (head + fine-tuning)
@@ -150,8 +161,10 @@ iClaim/
 │   ├── severity.py            # Rule-based multi-signal severity assessment
 │   ├── analytics.py           # Claim logging, priority rules, and cost estimation
 │   └── utils.py               # Laplacian blur validation and image helpers
-├── tests/                     # 80-test automated suite (no ImageNet download required)
-├── models/                    # Trained model weights (.keras) and class_names.json
+├── tests/                     # 89-test automated suite (verification & regression)
+│   ├── test_vehicle_gate.py   # Gatekeeper, glass proxy, and OOD entropy test cases
+│   └── ...                    # Analytics, model, gradcam, image validation tests
+├── models/                    # Trained damage model, vehicle gatekeeper, and class index
 ├── data/                      # Dataset directories and synthetic claim registers
 ├── reports/                   # Training curves, confusion matrices, and results.md
 ├── config.yaml                # Single source of truth configuration
@@ -212,6 +225,7 @@ python -m src.evaluate
 - **Damage Taxonomy Explorer**: Visual cards explaining the 5 recognized damage categories and handling protocols.
 
 ### 2. Claim Assessment Bay (`1_Claim.py`)
+- **Vehicle Verification & Safety Pre-filter**: Automatically validates photos against automotive criteria. Rejects non-vehicle objects (animals, food, everyday clutter) with a dedicated diagnostics panel while correctly recognizing fractured safety glass and close-up body panels.
 - **AI Vision Inspection HUD**: Uploaded images and Grad-CAM attention heatmaps are displayed in cybernetic camera viewports with animated holographic scanning lines and reticle brackets.
 - **Confidence & Blur Telemetry**: Automatic Laplacian sharpness scoring warns if an image is blurry (<60).
 - **Actuarial Summary Dossier**: Calculates indicative repair ranges in INR, checks claimed amounts against expected intervals, and assigns triage priority.

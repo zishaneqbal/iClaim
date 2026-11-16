@@ -143,3 +143,16 @@ synthetic_claims:
     - "Zero-depreciation"
     - "Pay-as-you-drive"
   seed: 42
+
+vehicle_verification:
+  enabled: true
+  gate_model_path: "models/vehicle_gate_mobilenetv2.keras"
+  class_index_path: "models/imagenet_class_index.json"
+  top_k: 5
+  min_vehicle_confidence: 0.05
+  ood_gating:
+    enabled: true
+    min_confidence: 0.35
+    max_norm_entropy: 0.85
+    min_margin: 0.04
+
