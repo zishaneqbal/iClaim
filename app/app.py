@@ -1,7 +1,4 @@
-"""Streamlit entry point (Home).
 
-Run:  streamlit run app/app.py
-"""
 
 from __future__ import annotations
 
@@ -315,3 +312,6 @@ if not model_available(CFG):
         )
         st.code("python -m src.data_loader --prepare\npython -m src.train --config config.yaml", language="bash")
         st.caption("See `docs/DATASET_GUIDE.md` for dataset download steps.")
+
+        
+""" Run:  streamlit run app/app.py """
